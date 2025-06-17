@@ -4,6 +4,8 @@ A lightweight desktop wrapper for the Jira web app, built with [Tauri](https://t
 
 ---
 
+![Screenshot](screenshot/ss1.png)
+
 ## ✨ Features
 
 - 🖥️ Opens your Jira instance in a clean desktop window
@@ -27,9 +29,8 @@ This is for users who want the Jira web experience in a minimal, native-feeling 
 
 ---
 
-## 📦 Build Locally
+## 📦 Download
 
-```bash
-pnpm install
-pnpm tauri dev
-```
+➡️ [Download the latest release](https://github.com/cas8398/jira-desktop-unofficial/releases) for Windows, macOS, or Linux.
+
+---
