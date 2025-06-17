@@ -1,0 +1,46 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependency directories
+node_modules/
+target/                 # Rust build artifacts
+src-tauri/Cargo.lock    # Optional: ignore Cargo.lock if you're using workspace
+src-tauri/target/       # Tauri's Rust build output
+
+# Build output
+dist/
+dist-ssr/
+*.local
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Tauri specific bundles
+src-tauri/bundled/
+src-tauri/icons/*.ico
+src-tauri/icons/*.icns
+src-tauri/icons/*.png
+
+# Tauri bundler output
+src-tauri/target/release/bundle/
+
+# Misc
+.env
+.env.*.local

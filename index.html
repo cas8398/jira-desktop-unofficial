@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="assets//tauri.svg" />
+    <title>Jira Desktop Unofficial</title>
+    <script type="module" src="/main.js" defer></script>
+  </head>
+  <body>
+    <div id="url-input-container">
+      <h1>Add Jira Instance</h1>
+      <input type="text" id="instanceName" placeholder="Instance Name" />
+      <input
+        type="text"
+        id="instanceUrl"
+        placeholder="https://company.atlassian.net"
+      />
+      <button id="saveBtn">Save</button>
+      <button id="cancelBtn">Cancel</button>
+      <div id="error" style="color: red; margin-top: 10px"></div>
+    </div>
+
+    <div id="saved-urls-container">
+      <h2>Saved Instances</h2>
+      <ul id="instancesList"></ul>
+      <button id="addNewBtn">Add New</button>
+    </div>
+  </body>
+  <footer id="app-footer">
+    <p>
+      <a href="#" id="github-link"
+        >Jira Desktop Unofficial <span id="version-app"></span
+      ></a>
+      — built with ❤️ by
+      <a href="#" id="maintainer-link">Cahyanudien AS</a>
+    </p>
+  </footer>
+</html>

@@ -1,0 +1,228 @@
+body {
+  font-family: sans-serif;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  background: url('src/assets/bg.jpg') no-repeat center center fixed;
+  background-size: cover;
+  color: #333;
+}
+
+body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: -1;
+}
+
+#url-input-container,
+#saved-urls-container {
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  margin-bottom: 20px;
+  width: 400px;
+  max-width: 90%;
+}
+
+.instance-url {
+  max-width: 350px;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+input[type="text"] {
+  width: calc(100% - 22px);
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Base Button Styles */
+button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 5px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Primary Button (Default) */
+button {
+  background-color: #0052cc;
+  color: white;
+}
+
+button:hover {
+  background-color: #0043b3;
+}
+
+/* Danger Button (Delete) */
+button.danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+button.danger:hover {
+  background-color: #c82333;
+}
+
+/* Info Button */
+button.info {
+  background-color: #17a2b8;
+  color: white;
+}
+
+button.info:hover {
+  background-color: #138496;
+}
+
+/* Success Button */
+button.success {
+  background-color: #28a745;
+  color: white;
+}
+
+button.success:hover {
+  background-color: #218838;
+}
+
+/* Warning Button */
+button.warning {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+button.warning:hover {
+  background-color: #e0a800;
+}
+
+/* Secondary Button */
+button.secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+button.secondary:hover {
+  background-color: #5a6268;
+}
+
+/* Outline Button Variant */
+button.outline {
+  background-color: transparent;
+  border: 2px solid currentColor;
+}
+
+/* Button Sizes */
+button.small {
+  padding: 6px 12px;
+  font-size: 0.875rem;
+}
+
+button.large {
+  padding: 12px 24px;
+  font-size: 1.125rem;
+}
+
+/* Disabled State */
+button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Button with Icon */
+button .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.saved-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.saved-item span {
+  cursor: pointer;
+}
+
+.saved-item span:hover {
+  color: #0052cc;
+}
+
+.titlebar {
+  height: 30px;
+  /* Adjust as needed */
+  background: #329ea3;
+  /* Or any color/gradient */
+  user-select: none;
+  /* Prevent text selection on title bar */
+  display: flex;
+  justify-content: flex-end;
+  /* Align buttons to the right */
+  align-items: center;
+  /* Vertically center buttons */
+  position: fixed;
+  /* Keep it at the top */
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  /* Ensure it's above other content */
+}
+
+.titlebar-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 30px;
+  /* Or your preferred size */
+  height: 30px;
+  cursor: pointer;
+}
+
+.titlebar-button:hover {
+  background: #5bbec3;
+  /* Hover effect */
+}
+
+#app-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #222;
+  color: white;
+  text-align: center;
+  padding: 10px;
+  font-size: 0.9em;
+}
+
+a {
+  color: #0052cc;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+#app-footer a {
+  color: #61dafb;
+}
