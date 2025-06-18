@@ -33,10 +33,7 @@ Thumbs.db
 *.sw?
 
 # Tauri specific bundles
-src-tauri/bundled/
-src-tauri/icons/*.ico
-src-tauri/icons/*.icns
-src-tauri/icons/*.png
+src-tauri/bundled/ 
 
 # Tauri bundler output
 src-tauri/target/release/bundle/
