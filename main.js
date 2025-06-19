@@ -70,6 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
       span.classList.add("instance-url");
       span.textContent = `${instance.name} (${instance.url})`;
       span.onclick = () => openWebsiteInNewWindow(instance.url);
+      //span.onclick = () => window.location.href = instance.url;
 
       const deleteBtn = document.createElement("button");
       deleteBtn.classList.add("warning");

@@ -1,36 +1,45 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-use tauri::{AppHandle, Manager, WebviewWindowBuilder, WindowEvent};
+use tauri::{AppHandle, Manager, WindowEvent};
 use tauri_utils::config::WebviewUrl;
 
 #[tauri::command]
-fn open_website_window(app: AppHandle, url: String) {
+async fn open_website_window(app: AppHandle, url: String) -> Result<(), String> {
+    use uuid::Uuid;
+
     let display_title = url.replace("https://", "").replace("http://", "");
+    let window_id = format!("website-window-{}", Uuid::new_v4());
 
     // Hide the main window
     if let Some(main_window) = app.get_window("main") {
-        main_window.hide().unwrap();
+        main_window.hide().unwrap_or(());
     }
 
-    // Open the new window
-    let new_window = WebviewWindowBuilder::new(
+    // Build the new window
+    let new_window = tauri::WebviewWindowBuilder::new(
         &app,
-        "website-window",
+        &window_id,
         WebviewUrl::External(url.parse().unwrap()),
     )
     .title(&display_title)
-    .inner_size(1000.0_f64, 700.0_f64)
+    .inner_size(1000.0, 700.0)
+    .resizable(true)
+    .decorations(true)
     .build()
-    .expect("failed to build new window");
+    .map_err(|e| format!("Window creation failed: {}", e))?;
 
-    // Listen for the new window's close event
+    // Clone app handle for use in the event handler
     let app_handle = app.clone();
+
+    // Attach event listener to restore main window when this new one is closed
     new_window.on_window_event(move |event| {
         if let WindowEvent::CloseRequested { .. } = event {
             if let Some(main_window) = app_handle.get_window("main") {
-                main_window.show().unwrap();
+                main_window.show().unwrap_or(());
             }
         }
     });
+
+    Ok(())
 }
 
 fn main() {

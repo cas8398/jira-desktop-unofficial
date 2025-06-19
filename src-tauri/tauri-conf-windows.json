@@ -23,6 +23,7 @@
         "minWidth": 800,
         "minHeight": 600,
         "resizable": true,
+        "visible": true,
         "devtools": false
       }
     ],
@@ -34,8 +35,7 @@
     "active": true,
     "windows": {
       "webviewInstallMode": {
-        "type": "offlineInstaller",
-        "silent": true
+        "type": "embedBootstrapper"
       }
     },
     "targets": ["msi"],
