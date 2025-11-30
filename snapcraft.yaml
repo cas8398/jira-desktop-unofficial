@@ -1,0 +1,45 @@
+name: jira-unofficial-desktop
+base: core24
+version: "0.1.2"
+summary: Jira unofficial desktop client
+description: A Jira desktop client built with Tauri.
+
+grade: stable
+confinement: classic
+
+title: Jira Desktop Unofficial
+license: MIT
+contact: cas8398@duck.com
+website: https://github.com/cas8398/jira-unofficial-desktop
+
+icon: snap/gui/icon.png
+
+apps:
+  jira-unofficial-desktop:
+    command: usr/bin/jira-unofficial-desktop
+    desktop: usr/share/applications/jira-unofficial-desktop.desktop
+    plugs:
+      - network
+      - network-bind
+      - desktop
+
+parts:
+  jira-app:
+    plugin: dump
+    source: .
+    # REMOVED ALL stage-packages - let extensions handle dependencies
+    override-build: |
+      set -eux
+      mkdir -p $CRAFT_PART_INSTALL/usr/bin
+      mkdir -p $CRAFT_PART_INSTALL/usr/share/applications
+
+      cp src-tauri/target/release/jira-unofficial-desktop $CRAFT_PART_INSTALL/usr/bin/
+      chmod +x $CRAFT_PART_INSTALL/usr/bin/jira-unofficial-desktop
+
+      echo "[Desktop Entry]" > $CRAFT_PART_INSTALL/usr/share/applications/jira-unofficial-desktop.desktop
+      echo "Name=Jira Unofficial Desktop" >> $CRAFT_PART_INSTALL/usr/share/applications/jira-unofficial-desktop.desktop
+      echo "Exec=jira-unofficial-desktop" >> $CRAFT_PART_INSTALL/usr/share/applications/jira-unofficial-desktop.desktop
+      echo "Icon=\${SNAP}/meta/gui/icon.png" >> $CRAFT_PART_INSTALL/usr/share/applications/jira-unofficial-desktop.desktop
+      echo "Type=Application" >> $CRAFT_PART_INSTALL/usr/share/applications/jira-unofficial-desktop.desktop
+      echo "Categories=Network;Office;" >> $CRAFT_PART_INSTALL/usr/share/applications/jira-unofficial-desktop.desktop
+      echo "Comment=Unofficial Jira desktop client" >> $CRAFT_PART_INSTALL/usr/share/applications/jira-unofficial-desktop.desktop

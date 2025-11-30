@@ -2,3 +2,16 @@ RUN :
 
 pnpm tauri dev
 pnpm tauri build
+
+
+----
+
+SNAP BUILD:
+snapcraft clean
+snapcraft pack --use-lxd --verbose --debug
+
+# Register the name 'xxxxxx' (if available)
+snapcraft register xxxxx
+
+-- upload
+snapcraft upload --release=stable xxxxxx_amd64.snap

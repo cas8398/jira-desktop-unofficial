@@ -41,3 +41,7 @@ src-tauri/target/release/bundle/
 # Misc
 .env
 .env.*.local
+parts
+prime
+stage
+*.snap
