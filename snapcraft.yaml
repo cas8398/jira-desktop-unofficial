@@ -2,7 +2,7 @@ name: jira-unofficial-desktop
 base: core24
 version: "0.1.2"
 summary: Jira unofficial desktop client
-description: A Jira desktop client built with Tauri.
+description: A lightweight, native desktop client for Jira built with Tauri.
 
 grade: stable
 confinement: classic
@@ -27,7 +27,6 @@ parts:
   jira-app:
     plugin: dump
     source: .
-    # REMOVED ALL stage-packages - let extensions handle dependencies
     override-build: |
       set -eux
       mkdir -p $CRAFT_PART_INSTALL/usr/bin
