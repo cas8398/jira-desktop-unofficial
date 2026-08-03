@@ -677,6 +677,122 @@ button:active {
   color: var(--border-hover);
 }
 
+/* ─── Top Left Controls ───────────────────────────────── */
+.top-left-controls {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.version-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--surface-0);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font-size: 12px;
+}
+
+.current-version {
+  font-weight: 500;
+  color: var(--text-primary);
+  opacity: 0.8;
+  font-size: 11px;
+}
+
+.version-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.version-status svg {
+  flex-shrink: 0;
+}
+
+.version-status.checking {
+  color: var(--text-muted);
+}
+
+.version-status.latest {
+  color: #22c55e;
+}
+
+.version-status.update-available {
+  color: #f59e0b;
+}
+
+.version-status.error {
+  color: #ef4444;
+}
+
+.update-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: #f59e0b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  font-family: var(--font);
+}
+
+.update-btn:hover {
+  background: #d97706;
+  transform: translateY(-1px);
+}
+
+.update-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* ─── Background Settings Button ─────────────────────── */
+#bgSettingsBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  background: var(--surface-0);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all var(--transition);
+  letter-spacing: 0.01em;
+}
+
+#bgSettingsBtn:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+}
+
+#bgSettingsBtn svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
 /* ─── Responsive ──────────────────────────────────────── */
 @media (max-width: 480px) {
   body {

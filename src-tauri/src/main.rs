@@ -142,54 +142,6 @@ fn update_window_title(window: tauri::Window, title: String) {
 // JS injections
 // ─────────────────────────────────────────────────────────────────────────────
 
-fn inject_drag_drop_fix(window: &WebviewWindow) {
-    let window_clone = window.clone();
-    thread::spawn(move || {
-        thread::sleep(Duration::from_millis(1000));
-        let _ = window_clone.eval(r#"
-            (function() {
-                if (window.__jdu_dnd_patched__) return;
-                window.__jdu_dnd_patched__ = true;
-                console.log('[JDU] Applying HTML5 drag-drop fix');
-
-                const style = document.createElement('style');
-                style.textContent = `
-                    html, body { touch-action: pan-y; }
-                    [draggable="true"] { -webkit-user-drag: element; cursor: grab; }
-                    [draggable="true"]:active { cursor: grabbing; }
-                `;
-                document.head.appendChild(style);
-
-                document.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-                }, false);
-
-                document.addEventListener('drop', (e) => { e.preventDefault(); }, false);
-
-                const observer = new MutationObserver((mutations) => {
-                    for (const mutation of mutations) {
-                        for (const node of mutation.addedNodes) {
-                            if (node.nodeType !== 1) continue;
-                            const cards = node.matches
-                                ? (node.matches('[role="button"], .ghx-issue, .js-issue-title, [data-testid*="card"]')
-                                    ? [node]
-                                    : [...node.querySelectorAll('[role="button"], .ghx-issue, [data-testid*="card"]')])
-                                : [];
-                            for (const card of cards) { card.setAttribute('draggable', 'true'); }
-                        }
-                    }
-                });
-
-                if (document.body) {
-                    observer.observe(document.body, { childList: true, subtree: true });
-                }
-                console.log('[JDU] HTML5 drag-drop fix applied');
-            })();
-        "#);
-    });
-}
-
 const TITLE_SYNC_JS: &str = r#"
     (function() {
         if (window.__jdu_title_sync__) return;
@@ -231,6 +183,155 @@ const TITLE_SYNC_JS: &str = r#"
     })();
 "#;
 
+const NEW_WINDOW_HANDLER_JS: &str = r#"
+    (function() {
+        if (window.__jdu_new_window_handler__) return;
+        window.__jdu_new_window_handler__ = true;
+        
+        console.log('[JDU] Installing new window handler');
+        
+        // Intercept ALL link clicks
+        document.addEventListener('click', function(e) {
+            // Find the anchor element
+            let target = e.target;
+            while (target && target.tagName !== 'A') {
+                target = target.parentElement;
+                if (!target) break;
+            }
+            
+            if (!target || target.tagName !== 'A') return;
+            
+            const href = target.getAttribute('href');
+            const targetAttr = target.getAttribute('target');
+            
+            // If it's a link that should open in a new window/tab
+            if (href && (targetAttr === '_blank' || targetAttr === '_new' || e.ctrlKey || e.metaKey)) {
+                // Skip javascript: and mailto: links
+                if (href.startsWith('javascript:') || href.startsWith('mailto:')) {
+                    return;
+                }
+                
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('[JDU] Opening new window for:', href);
+                
+                // Use Tauri command to create new window
+                if (window.__TAURI__) {
+                    window.__TAURI__.core.invoke('open_website_window', { url: href })
+                        .catch(err => console.error('[JDU] Failed to open window:', err));
+                } else {
+                    // Fallback for web version
+                    window.open(href, '_blank');
+                }
+            }
+        }, true); // Capture phase to intercept before Jira
+        
+        // Intercept window.open() calls
+        const originalOpen = window.open;
+        window.open = function(url, name, features) {
+            if (url && !url.startsWith('javascript:') && !url.startsWith('mailto:')) {
+                console.log('[JDU] Intercepted window.open:', url);
+                
+                if (window.__TAURI__) {
+                    // Create new Tauri window
+                    window.__TAURI__.core.invoke('open_website_window', { url: url })
+                        .catch(err => console.error('[JDU] Failed to open window:', err));
+                    
+                    // Return a dummy window object
+                    return {
+                        closed: false,
+                        close: function() {},
+                        focus: function() {},
+                        blur: function() {},
+                        postMessage: function() {}
+                    };
+                }
+            }
+            return originalOpen.call(this, url, name, features);
+        };
+        
+        // Also intercept middle-click (which opens new tabs in browsers)
+        document.addEventListener('mousedown', function(e) {
+            if (e.button === 1) { // Middle click
+                let target = e.target;
+                while (target && target.tagName !== 'A') {
+                    target = target.parentElement;
+                    if (!target) break;
+                }
+                
+                if (target && target.tagName === 'A') {
+                    const href = target.getAttribute('href');
+                    if (href && !href.startsWith('javascript:') && !href.startsWith('mailto:')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        console.log('[JDU] Middle-click opening new window for:', href);
+                        
+                        if (window.__TAURI__) {
+                            window.__TAURI__.core.invoke('open_website_window', { url: href })
+                                .catch(err => console.error('[JDU] Failed to open window:', err));
+                        }
+                    }
+                }
+            }
+        }, true);
+        
+        console.log('[JDU] New window handler installed');
+    })();
+"#;
+
+const DRAG_DROP_FIX_JS: &str = r#"
+    (function() {
+        if (window.__jdu_dnd_patched__) return;
+        window.__jdu_dnd_patched__ = true;
+        console.log('[JDU] Applying HTML5 drag-drop fix');
+
+        const style = document.createElement('style');
+        style.textContent = `
+            html, body { touch-action: pan-y; }
+            [draggable="true"] { -webkit-user-drag: element; cursor: grab; }
+            [draggable="true"]:active { cursor: grabbing; }
+        `;
+        document.head.appendChild(style);
+
+        document.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+        }, false);
+
+        document.addEventListener('drop', (e) => { e.preventDefault(); }, false);
+
+        const observer = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                for (const node of mutation.addedNodes) {
+                    if (node.nodeType !== 1) continue;
+                    const cards = node.matches
+                        ? (node.matches('[role="button"], .ghx-issue, .js-issue-title, [data-testid*="card"]')
+                            ? [node]
+                            : [...node.querySelectorAll('[role="button"], .ghx-issue, [data-testid*="card"]')])
+                        : [];
+                    for (const card of cards) { card.setAttribute('draggable', 'true'); }
+                }
+            }
+        });
+
+        if (document.body) {
+            observer.observe(document.body, { childList: true, subtree: true });
+        }
+        console.log('[JDU] HTML5 drag-drop fix applied');
+    })();
+"#;
+
+fn inject_scripts(window: &WebviewWindow) {
+    let window_clone = window.clone();
+    thread::spawn(move || {
+        thread::sleep(Duration::from_millis(800));
+        let _ = window_clone.eval(TITLE_SYNC_JS);
+        let _ = window_clone.eval(NEW_WINDOW_HANDLER_JS);
+        let _ = window_clone.eval(DRAG_DROP_FIX_JS);
+    });
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Window command
@@ -238,17 +339,76 @@ const TITLE_SYNC_JS: &str = r#"
 
 #[tauri::command]
 async fn open_website_window(app: tauri::AppHandle, url: String) -> Result<(), String> {
-    let hostname = url
+    // Handle relative URLs
+    let full_url = if url.starts_with("http://") || url.starts_with("https://") {
+        url
+    } else {
+        // Try to get the current window's URL as base
+        let current_window = app.webview_windows()
+            .into_iter()
+            .find(|(label, _)| label.starts_with("website-window-"))
+            .map(|(_, window)| window)
+            .or_else(|| app.get_webview_window("main"));
+        
+        if let Some(window) = current_window {
+            if let Ok(current_url) = window.url() {
+                let base = current_url.to_string();
+                if url.starts_with("/") {
+                    // Absolute path: https://domain.com/path
+                    let base_parts: Vec<&str> = base.split('/').collect();
+                    let base_url = if base_parts.len() > 3 {
+                        base_parts[0..3].join("/")
+                    } else {
+                        base
+                    };
+                    format!("{}{}", base_url, url)
+                } else {
+                    // Relative path: https://domain.com/some/path + ../other
+                    let base_parts: Vec<&str> = base.split('/').collect();
+                    let mut path_parts = if base_parts.len() > 3 {
+                        base_parts[3..].to_vec()
+                    } else {
+                        vec![]
+                    };
+                    // Remove last part if it looks like a file or has extension
+                    if let Some(last) = path_parts.last() {
+                        if last.contains('.') {
+                            path_parts.pop();
+                        }
+                    }
+                    if path_parts.is_empty() {
+                        format!("{}/{}", base_parts[0..3].join("/"), url)
+                    } else {
+                        format!("{}/{}/{}", base_parts[0..3].join("/"), path_parts.join("/"), url)
+                    }
+                }
+            } else {
+                return Err("Cannot resolve relative URL".to_string());
+            }
+        } else {
+            return Err("No window to resolve relative URL".to_string());
+        }
+    };
+
+    let hostname = full_url
         .replace("https://", "").replace("http://", "")
-        .split('/').next().unwrap_or(&url).to_string();
+        .split('/').next().unwrap_or(&full_url).to_string();
 
     let window_id = format!("website-window-{}", Uuid::new_v4());
 
-    if let Some(main_window) = app.get_webview_window("main") {
-        let _ = main_window.hide();
+    // Hide main window if this is the first Jira window
+    let jira_windows: Vec<_> = app.webview_windows()
+        .into_iter()
+        .filter(|(label, _)| label.starts_with("website-window-"))
+        .collect();
+    
+    if jira_windows.is_empty() {
+        if let Some(main_window) = app.get_webview_window("main") {
+            let _ = main_window.hide();
+        }
     }
 
-    let parsed_url = url.parse().map_err(|e| format!("Invalid URL: {}", e))?;
+    let parsed_url = full_url.parse().map_err(|e| format!("Invalid URL: {}", e))?;
 
     let builder = tauri::WebviewWindowBuilder::new(&app, &window_id, WebviewUrl::External(parsed_url))
         .title(&format!("🔄 Loading {}...", hostname))
@@ -256,8 +416,6 @@ async fn open_website_window(app: tauri::AppHandle, url: String) -> Result<(), S
         .resizable(true)
         .visible(true)
         .decorations(true)
-        // Disables WebView2's native drag interception so HTML5 DnD works on Windows.
-        // No-op on macOS and Linux — safe to call unconditionally.
         .disable_drag_drop_handler();
 
     match builder.build() {
@@ -269,19 +427,25 @@ async fn open_website_window(app: tauri::AppHandle, url: String) -> Result<(), S
                 if let tauri::WindowEvent::CloseRequested { .. } = event {
                     let mut last_titles = LAST_TITLES.lock().unwrap();
                     last_titles.remove(&window_label_clone);
-                    if let Some(main_window) = app_handle.get_webview_window("main") {
-                        let _ = main_window.show();
+                    
+                    // Check if there are any Jira windows left
+                    let jira_windows: Vec<_> = app_handle.webview_windows()
+                        .into_iter()
+                        .filter(|(label, _)| label.starts_with("website-window-"))
+                        .collect();
+                    
+                    // If no Jira windows left, show the main window
+                    if jira_windows.is_empty() {
+                        if let Some(main_window) = app_handle.get_webview_window("main") {
+                            let _ = main_window.show();
+                        }
                     }
                 }
             });
 
-            let win_title = new_window.clone();
-            thread::spawn(move || {
-                thread::sleep(Duration::from_millis(800));
-                let _ = win_title.eval(TITLE_SYNC_JS);
-            });
-
-            inject_drag_drop_fix(&new_window);
+            // Inject scripts into the new window
+            inject_scripts(&new_window);
+            
             Ok(())
         }
         Err(e) => Err(format!("Window creation failed: {}", e)),
@@ -294,9 +458,6 @@ async fn open_website_window(app: tauri::AppHandle, url: String) -> Result<(), S
 
 fn main() {
     // ── Panic hook — last-resort safety net on Windows ──────────────────────
-    // If anything panics after this point (including deep inside Tauri/wry),
-    // the user sees a dialog instead of a silent disappearing window.
-    // windows_subsystem = "windows" hides stderr so eprintln is useless.
     #[cfg(target_os = "windows")]
     std::panic::set_hook(Box::new(|info| {
         let msg = info.payload().downcast_ref::<String>().map(|s| s.as_str())
@@ -354,17 +515,11 @@ fn main() {
         std::process::exit(1);
     }
 
-    // ── macOS: WKWebView ships with the OS — no check needed ─────────────────
-    // Built into macOS since 10.10 (Yosemite, 2014). Tauri would surface
-    // a clear error on its own if it were somehow absent.
-
     // ── Start Tauri ──────────────────────────────────────────────────────────
     let result = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![open_website_window, update_window_title])
         .setup(|app| {
-            // Guard against a missing "main" label in tauri.conf.json — that
-            // causes a silent clean exit (event loop has no windows to run).
             match app.get_webview_window("main") {
                 None => {
                     #[cfg(target_os = "windows")]
@@ -378,15 +533,14 @@ fn main() {
                 }
                 Some(main_window) => {
                     let _ = main_window.set_title("JDU - Jira Desktop Unofficial");
-                    inject_drag_drop_fix(&main_window);
+                    inject_scripts(&main_window);
                     Ok(())
                 }
             }
         })
         .run(tauri::generate_context!());
 
-    // ── Handle .run() returning Err (e.g. WebView2 init failure) ────────────
-    // Some WebView2 failures surface as Err rather than a panic.
+    // ── Handle .run() returning Err ─────────────────────────────────────────
     if let Err(e) = result {
         let msg = format!("{}", e);
         eprintln!("[JDU] fatal: {}", msg);
