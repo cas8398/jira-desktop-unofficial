@@ -428,18 +428,21 @@ async fn open_website_window(app: tauri::AppHandle, url: String) -> Result<(), S
                     let mut last_titles = LAST_TITLES.lock().unwrap();
                     last_titles.remove(&window_label_clone);
                     
-                    // Check if there are any Jira windows left
-                    let jira_windows: Vec<_> = app_handle.webview_windows()
-                        .into_iter()
-                        .filter(|(label, _)| label.starts_with("website-window-"))
-                        .collect();
-                    
-                    // If no Jira windows left, show the main window
-                    if jira_windows.is_empty() {
-                        if let Some(main_window) = app_handle.get_webview_window("main") {
-                            let _ = main_window.show();
+                    let app_handle_clone = app_handle.clone();
+                    std::thread::spawn(move || {
+                        std::thread::sleep(std::time::Duration::from_millis(100));
+                        
+                        let jira_windows: Vec<_> = app_handle_clone.webview_windows()
+                            .into_iter()
+                            .filter(|(label, _)| label.starts_with("website-window-"))
+                            .collect();
+                        
+                        if jira_windows.is_empty() {
+                            if let Some(main_window) = app_handle_clone.get_webview_window("main") {
+                                let _ = main_window.show();
+                            }
                         }
-                    }
+                    });
                 }
             });
 
