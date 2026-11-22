@@ -13,7 +13,7 @@
     "vite": "^5.0.0"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.5.0",
+    "@tauri-apps/api": "^2.12.5",
     "@tauri-apps/plugin-opener": "~2.3.0"
   }
 }
